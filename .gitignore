@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+certifypro.db
+.env
+__MACOSX/
+.DS_Store
+*.log
+backups/

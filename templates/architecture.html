@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">AWS Cloud Architecture</h2>
+        <p class="text-muted mb-0">Technical design blueprint and service communication topology</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Diagram Section -->
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-sitemap text-primary me-2"></i>Infrastructure Flowchart</h5>
+            
+            <div class="d-flex justify-content-center p-3 bg-light rounded-3 border">
+                <div class="mermaid w-100" style="background-color: transparent;">
+                    graph TD
+                        User[👤 User / Client Browser]
+                        
+                        subgraph VPC ["Amazon VPC (Virtual Private Cloud)"]
+                            subgraph PublicSubnet ["Public Subnet"]
+                                ALB["⚖️ Application Load Balancer"]
+                                EC2["💻 Amazon EC2 (Flask Web App)"]
+                            end
+                            
+                            subgraph PrivateSubnet ["Private Subnet"]
+                                RDS[("🗄️ Amazon RDS (MySQL Database)")]
+                            end
+                        end
+                        
+                        S3["🪣 Amazon S3 (Document Vault)"]
+                        CW["👁️ Amazon CloudWatch (Logs & Metrics)"]
+                        
+                        %% Communication lines
+                        User -->|HTTPS Request| ALB
+                        ALB -->|Forward Request| EC2
+                        EC2 -->|Query/Write Data| RDS
+                        EC2 -->|Upload Certificate/Report| S3
+                        EC2 -->|Push Logs & Performance Stats| CW
+                        
+                        %% Style overrides
+                        classDef aws fill:#ff9900,stroke:#232f3e,stroke-width:2px,color:#fff;
+                        classDef node fill:#1e293b,stroke:#0f172a,stroke-width:1.5px,color:#fff;
+                        classDef client fill:#0284c7,stroke:#0369a1,stroke-width:2px,color:#fff;
+                        
+                        class ALB,EC2,RDS,S3,CW aws;
+                        class User client;
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Section -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm p-4 bg-white" style="height: 100%;">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>AWS Integration Detail</h5>
+            
+            <div class="d-flex flex-column gap-3 small">
+                <div class="border-bottom pb-2">
+                    <h6 class="fw-bold text-dark mb-1"><i class="fa-solid fa-server me-2 text-info"></i>Amazon EC2</h6>
+                    <p class="text-muted mb-0">Hosts the Python Flask application inside a Docker container. Managed with auto-scaling to maintain performance.</p>
+                </div>
+                
+                <div class="border-bottom pb-2">
+                    <h6 class="fw-bold text-dark mb-1"><i class="fa-solid fa-database me-2 text-primary"></i>Amazon RDS (MySQL)</h6>
+                    <p class="text-muted mb-0">Relational Database Service hosting MySQL. Stores structured schemas for users, candidates, and workflows with automated daily backups.</p>
+                </div>
+                
+                <div class="border-bottom pb-2">
+                    <h6 class="fw-bold text-dark mb-1"><i class="fa-solid fa-bucket me-2 text-success"></i>Amazon S3</h6>
+                    <p class="text-muted mb-0">Simple Storage Service used to hold uploaded documents. Supports pre-signed URLs to enforce download authorization limits.</p>
+                </div>
+                
+                <div>
+                    <h6 class="fw-bold text-dark mb-1"><i class="fa-solid fa-eye me-2 text-danger"></i>Amazon CloudWatch</h6>
+                    <p class="text-muted mb-0">Monitors application CPU/RAM metrics and gathers syslogs dynamically to trigger warnings if resources breach threshold states.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New AWS Integration Section -->
+<div class="row g-4 mt-2">
+    <!-- VPC Network & Security Groups -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-network-wired text-primary me-2"></i>VPC Networks & Security Groups</h5>
+            <div class="table-responsive border-0 small">
+                <table class="table table-bordered align-middle mb-0">
+                    <thead>
+                        <tr class="table-light">
+                            <th>Security Group</th>
+                            <th>Inbound Rules (Ingress)</th>
+                            <th>Outbound Rules (Egress)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong class="text-primary">ALB-SG</strong> (Load Balancer)</td>
+                            <td>HTTP (80) & HTTPS (443) from <code>0.0.0.0/0</code></td>
+                            <td>Forward to EC2-SG on Port 5001</td>
+                        </tr>
+                        <tr>
+                            <td><strong class="text-primary">EC2-SG</strong> (Flask App Server)</td>
+                            <td>Port 5001 from <code>ALB-SG</code>; SSH (22) from Admin IP</td>
+                            <td>All Traffic to Internet (S3, CloudWatch API)</td>
+                        </tr>
+                        <tr>
+                            <td><strong class="text-primary">RDS-SG</strong> (MySQL Database)</td>
+                            <td>MySQL Port (3306) restricted to <code>EC2-SG</code> only</td>
+                            <td>None (DB remains fully isolated in Private Subnet)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted small mt-2 mb-0">
+                <i class="fa-solid fa-circle-info me-1"></i> Public subnets route outbound traffic via the Internet Gateway (IGW). Private subnets communicate through NAT Gateways for system updates.
+            </p>
+        </div>
+    </div>
+
+    <!-- RDS Secure Connections -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-user-lock text-primary me-2"></i>RDS MySQL SSL/TLS Connectivity</h5>
+            <p class="text-muted small mb-3">
+                Connecting to AWS RDS MySQL from our EC2 Flask application utilizes SSL verification to encrypt data in transit. Below is the connection parameter setup required in production:
+            </p>
+            <div class="bg-light rounded p-3 mb-0">
+                <pre class="mb-0 text-secondary" style="font-size: 0.75rem;"><code># Production secure db.py connector configuration
+ssl_config = {
+    'ssl_ca': '/app/certs/global-bundle.pem',
+    'ssl_verify_cert': True
+}
+conn = mysql.connector.connect(
+    host=DB_HOST,
+    user=DB_USER,
+    password=DB_PASSWORD,
+    database=DB_NAME,
+    ssl_config=ssl_config
+)</code></pre>
+            </div>
+            <span class="text-muted small mt-2 d-block">
+                <i class="fa-solid fa-download me-1 text-info"></i> Download the CA Bundle: <code>wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem</code>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2 mb-4">
+    <!-- IAM Policies -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-id-card-clip text-primary me-2"></i>IAM Role & Permission Policies (EC2 Instance Profile)</h5>
+            <p class="text-muted small mb-3">
+                Rather than hardcoding credentials, the EC2 instance profile should be assigned an IAM Role with the following custom policy to allow uploads to S3 and streaming to CloudWatch:
+            </p>
+            <div class="bg-light rounded p-3">
+                <pre class="mb-0 text-secondary" style="font-size: 0.75rem;"><code>{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "S3BucketAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "arn:aws:s3:::certifypro-document-vault/*"
+        },
+        {
+            "Sid": "CloudWatchLoggingAndMetrics",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "cloudwatch:PutMetricData"
+            ],
+            "Resource": "*"
+        }
+    ]
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Mermaid.js for drawing diagrams -->
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+</script>
+{% endblock %}

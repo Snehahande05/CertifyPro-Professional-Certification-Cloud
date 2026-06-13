@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: certifypro-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: certifypro
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: certifypro_user
+      MYSQL_PASSWORD: dbpassword123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Automatically initialize database schema using our sql file
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  web:
+    build: .
+    container_name: certifypro-web
+    restart: always
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=certifypro_prod_key_7711993
+      - DB_HOST=db
+      - DB_USER=certifypro_user
+      - DB_PASSWORD=dbpassword123
+      - DB_NAME=certifypro
+      - DB_PORT=3306
+      - PORT=5001
+      # Configure AWS credentials here for S3 and CloudWatch integrations
+      - S3_BUCKET=certifypro-document-vault
+      - AWS_ACCESS_KEY_ID=YOUR_AWS_ACCESS_KEY
+      - AWS_SECRET_ACCESS_KEY=YOUR_AWS_SECRET_KEY
+      - AWS_DEFAULT_REGION=us-east-1
+      - ENABLE_CLOUDWATCH=true
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

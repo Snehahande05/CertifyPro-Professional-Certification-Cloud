@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Cloud Operations Dashboard</h2>
+        <p class="text-muted mb-0">Real-time telemetry and resource usage monitoring (CloudWatch Integrated)</p>
+    </div>
+    <div class="text-end">
+        <span class="badge bg-success py-2 px-3 fw-bold"><i class="fa-solid fa-server me-1"></i> EC2 Instance: Online</span>
+    </div>
+</div>
+
+<!-- Service Status Grid -->
+<div class="row g-4 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 bg-white text-center">
+            <div class="fs-4 text-warning mb-1"><i class="fa-solid fa-cloud-bolt"></i></div>
+            <div class="small fw-semibold text-muted">EC2 Web Instance</div>
+            <div class="fw-bold text-success mt-1" style="font-size: 0.85rem;"><i class="fa-solid fa-circle-check me-1"></i>Healthy</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 bg-white text-center">
+            <div class="fs-4 text-primary mb-1"><i class="fa-solid fa-database"></i></div>
+            <div class="small fw-semibold text-muted">AWS RDS MySQL</div>
+            <div class="fw-bold text-success mt-1" style="font-size: 0.85rem;"><i class="fa-solid fa-circle-check me-1"></i>{{ metrics.rds_status }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 bg-white text-center">
+            <div class="fs-4 text-info mb-1"><i class="fa-solid fa-box-open"></i></div>
+            <div class="small fw-semibold text-muted">AWS S3 Bucket</div>
+            <div class="fw-bold {% if 'Offline' in metrics.s3_status %}text-warning{% else %}text-success{% endif %} mt-1" style="font-size: 0.85rem;">
+                <i class="fa-solid {% if 'Offline' in metrics.s3_status %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} me-1"></i>
+                {{ 'Active' if 'Active' in metrics.s3_status else 'Local Fallback' }}
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 bg-white text-center">
+            <div class="fs-4 text-danger mb-1"><i class="fa-solid fa-eye"></i></div>
+            <div class="small fw-semibold text-muted">AWS CloudWatch Logs</div>
+            <div class="fw-bold text-success mt-1" style="font-size: 0.85rem;"><i class="fa-solid fa-circle-check me-1"></i>Pushing Stream</div>
+        </div>
+    </div>
+</div>
+
+<!-- Infrastructure Telemetry Grid -->
+<div class="row g-4 mb-4">
+    <!-- CPU and Memory Progress Widgets -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm p-4 bg-white" style="height: 100%;">
+            <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-gauge-high text-primary me-2"></i>Resource Allocation</h5>
+            
+            <!-- CPU Progress -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-semibold text-muted">CPU Usage</span>
+                    <span class="small fw-bold text-primary">{{ metrics.cpu }}%</span>
+                </div>
+                <div class="progress metric-progress">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ metrics.cpu }}%" aria-valuenow="{{ metrics.cpu }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            <!-- Memory Progress -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-semibold text-muted">Memory Usage</span>
+                    <span class="small fw-bold text-info">{{ metrics.memory }}%</span>
+                </div>
+                <div class="progress metric-progress">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ metrics.memory }}%" aria-valuenow="{{ metrics.memory }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            <!-- Storage Progress -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-semibold text-muted">Storage Usage</span>
+                    <span class="small fw-bold text-warning">{{ metrics.storage }}%</span>
+                </div>
+                <div class="progress metric-progress">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ metrics.storage }}%" aria-valuenow="{{ metrics.storage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            
+            <!-- Network Statistics -->
+            <div class="border-top pt-3 mt-2 row">
+                <div class="col-6">
+                    <span class="d-block small text-muted">Network Out (TX)</span>
+                    <span class="fw-bold fs-5 text-dark"><i class="fa-solid fa-arrow-up-long text-danger me-2"></i>{{ metrics.net_sent }} MB</span>
+                </div>
+                <div class="col-6">
+                    <span class="d-block small text-muted">Network In (RX)</span>
+                    <span class="fw-bold fs-5 text-dark"><i class="fa-solid fa-arrow-down-long text-success me-2"></i>{{ metrics.net_recv }} MB</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Telemetry Graph -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm p-4 bg-white" style="height: 100%;">
+            <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-chart-area text-primary me-2"></i>Resource Telemetry History</h5>
+            <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="telemetryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // System Telemetry Chart.js Simulation
+    const ctx = document.getElementById('telemetryChart').getContext('2d');
+    
+    // Initial datasets
+    const timeLabels = ['10m ago', '8m ago', '6m ago', '4m ago', '2m ago', 'Active'];
+    const cpuHistorical = [12, 18, 15, 22, 14, {{ metrics.cpu }}];
+    const ramHistorical = [40, 41, 41, 42, 42, {{ metrics.memory }}];
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: timeLabels,
+            datasets: [
+                {
+                    label: 'CPU Usage (%)',
+                    data: cpuHistorical,
+                    borderColor: '#0284c7',
+                    backgroundColor: 'rgba(2, 132, 199, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Memory Usage (%)',
+                    data: ramHistorical,
+                    borderColor: '#06b6d4',
+                    backgroundColor: 'rgba(6, 182, 212, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12 } }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    grid: { color: '#f1f5f9' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

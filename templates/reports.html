@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Reports Hub</h2>
+        <p class="text-muted mb-0">Export performance metrics and candidate data files</p>
+    </div>
+</div>
+
+<!-- Report Export Action Cards -->
+<div class="row g-4 mb-4">
+    <!-- Candidates Report Card -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1"><i class="fa-solid fa-users text-primary me-2"></i>Candidate Directory</h5>
+                    <p class="text-muted small mb-0">Complete list of registered candidates and their active statuses.</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('export_report', report_type='candidates', format_type='csv') }}" class="btn btn-outline-secondary w-50 small"><i class="fa-solid fa-file-csv me-2 text-success"></i>CSV</a>
+                <a href="{{ url_for('export_report', report_type='candidates', format_type='pdf') }}" target="_blank" class="btn btn-outline-secondary w-50 small"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>Print/PDF</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Certifications Report Card -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1"><i class="fa-solid fa-graduation-cap text-primary me-2"></i>Exam Outcomes</h5>
+                    <p class="text-muted small mb-0">Record of certifications, exam results, and approval histories.</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('export_report', report_type='certifications', format_type='csv') }}" class="btn btn-outline-secondary w-50 small"><i class="fa-solid fa-file-csv me-2 text-success"></i>CSV</a>
+                <a href="{{ url_for('export_report', report_type='certifications', format_type='pdf') }}" target="_blank" class="btn btn-outline-secondary w-50 small"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>Print/PDF</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Regions Report Card -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1"><i class="fa-solid fa-map-location-dot text-primary me-2"></i>Regional Analytics</h5>
+                    <p class="text-muted small mb-0">Performance indicators categorized by geographic registration region.</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('export_report', report_type='regions', format_type='csv') }}" class="btn btn-outline-secondary w-50 small"><i class="fa-solid fa-file-csv me-2 text-success"></i>CSV</a>
+                <a href="{{ url_for('export_report', report_type='regions', format_type='pdf') }}" target="_blank" class="btn btn-outline-secondary w-50 small"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>Print/PDF</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aggregations Row -->
+<div class="row g-4 mb-4">
+    <!-- Program Wise Aggregates -->
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-graduation-cap text-primary me-2"></i>Certification Program Metrics</h5>
+            <div class="table-responsive border-0">
+                <table class="table custom-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Program Name</th>
+                            <th class="text-end">Registered</th>
+                            <th class="text-end">Approved</th>
+                            <th class="text-end">Passed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in cert_reports %}
+                        <tr>
+                            <td class="fw-semibold">{{ c.cert_name }}</td>
+                            <td class="text-end text-muted">{{ c.registered_count }}</td>
+                            <td class="text-end text-success fw-medium">{{ c.approved_count }}</td>
+                            <td class="text-end text-info fw-bold">{{ c.passed_count }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No certification program metrics.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Region Wise Aggregates -->
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-globe text-primary me-2"></i>Geographic Summary</h5>
+            <div class="table-responsive border-0">
+                <table class="table custom-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Region</th>
+                            <th class="text-end">Total Candidates</th>
+                            <th class="text-end">Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in region_reports %}
+                        <tr>
+                            <td class="fw-semibold">{{ r.region }}</td>
+                            <td class="text-end text-secondary fw-semibold">{{ r.candidates_count }}</td>
+                            <td class="text-end text-success">{{ r.active_count }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">No regional metrics.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Log History -->
+<div class="card border-0 shadow-sm p-4 bg-white">
+    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Generated Reports Archive</h5>
+    <div class="table-responsive border-0">
+        <table class="table custom-table align-middle">
+            <thead>
+                <tr>
+                    <th>Report Name</th>
+                    <th>Parameters / Format</th>
+                    <th>Generated By</th>
+                    <th>File Reference</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in report_logs %}
+                <tr>
+                    <td class="fw-semibold text-dark"><i class="fa-solid fa-file-contract text-muted me-2"></i>{{ log.report_type }}</td>
+                    <td><span class="badge bg-light text-secondary border">{{ log.query_parameters }}</span></td>
+                    <td>{{ log.generator or 'System' }}</td>
+                    <td class="text-muted small"><code>{{ log.file_path }}</code></td>
+                    <td class="text-muted small">{{ log.generated_at }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">No reports generated in this session yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

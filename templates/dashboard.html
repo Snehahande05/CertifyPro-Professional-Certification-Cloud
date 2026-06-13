@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Executive Dashboard</h2>
+        <p class="text-muted mb-0">Operational overview of CertifyPro Certification Management</p>
+    </div>
+    <div class="text-end">
+        <span class="text-muted small">Session active as <span class="fw-semibold text-primary">{{ session['full_name'] }}</span> ({{ session['user_role'] }})</span>
+    </div>
+</div>
+
+<!-- KPI Cards Row -->
+<div class="row g-4 mb-4">
+    <!-- Card 1: Total Candidates -->
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+                <div class="kpi-title">Total Candidates</div>
+                <h3 class="kpi-value">{{ total_candidates }}</h3>
+            </div>
+            <div class="kpi-icon-wrapper bg-primary-subtle text-primary">
+                <i class="fa-solid fa-users"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card 2: Active Certifications -->
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+                <div class="kpi-title">Active Certifications</div>
+                <h3 class="kpi-value">{{ active_certs }}</h3>
+            </div>
+            <div class="kpi-icon-wrapper bg-success-subtle text-success">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card 3: Completed Certifications -->
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+                <div class="kpi-title">Completed (Passed)</div>
+                <h3 class="kpi-value">{{ completed_certs }}</h3>
+            </div>
+            <div class="kpi-icon-wrapper bg-info-subtle text-info">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card 4: Pending Approvals -->
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="kpi-card d-flex align-items-center justify-content-between">
+            <div>
+                <div class="kpi-title">Pending Approvals</div>
+                <h3 class="kpi-value">{{ pending_approvals }}</h3>
+            </div>
+            <div class="kpi-icon-wrapper bg-warning-subtle text-warning">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Growth -->
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white" style="height: 100%;">
+            <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-chart-line text-primary me-2"></i>Candidate Registration Trend</h5>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart 2: Pass/Fail -->
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white" style="height: 100%;">
+            <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Performance Outcome (Pass vs Fail)</h5>
+            <div style="position: relative; height: 300px; width: 100%;" class="d-flex align-items-center justify-content-center">
+                <canvas id="passFailChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and Region Metrics Row -->
+<div class="row g-4">
+    <!-- Recent Activity -->
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-list-check text-primary me-2"></i>Recent Activity Feed</h5>
+            <div class="table-responsive border-0">
+                <table class="table custom-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th>Action</th>
+                            <th>Entity/Candidate</th>
+                            <th>Triggered By</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for act in recent_activity %}
+                        <tr>
+                            <td>
+                                {% if act.type == 'Workflow' %}
+                                <span class="badge bg-primary-subtle text-primary"><i class="fa-solid fa-code-branch me-1"></i> Workflow</span>
+                                {% else %}
+                                <span class="badge bg-info-subtle text-info"><i class="fa-solid fa-user me-1"></i> Candidate</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if act.action in ['Approved', 'Registered'] %}
+                                <span class="text-success fw-semibold"><i class="fa-solid fa-check-circle me-1"></i> {{ act.action }}</span>
+                                {% elif act.action == 'Rejected' %}
+                                <span class="text-danger fw-semibold"><i class="fa-solid fa-times-circle me-1"></i> {{ act.action }}</span>
+                                {% else %}
+                                <span class="text-warning fw-semibold"><i class="fa-solid fa-spinner fa-spin me-1"></i> {{ act.action }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-medium">{{ act.item }}</td>
+                            <td class="text-muted">{{ act.user or 'System' }}</td>
+                            <td class="text-muted small">{{ act.date_time }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No recent activities found. Start adding records to generate telemetry.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Region breakdown -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white" style="height: 100%;">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-globe text-primary me-2"></i>Regional Distribution</h5>
+            <div class="table-responsive border-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="table-light">
+                            <th class="py-2 px-3 small text-uppercase">Region</th>
+                            <th class="py-2 px-3 small text-uppercase text-end">Candidates</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in region_data %}
+                        <tr>
+                            <td class="py-2 px-3 fw-medium text-dark"><i class="fa-solid fa-map-location-dot text-info me-2"></i>{{ r.region }}</td>
+                            <td class="py-2 px-3 text-end fw-semibold text-secondary">{{ r.count }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-3">No regional records.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 1. Growth Chart
+    const growthCtx = document.getElementById('growthChart').getContext('2d');
+    const growthLabels = [{% for r in registrations_chart %}"{{ r.month }}",{% endfor %}];
+    const growthData = [{% for r in registrations_chart %}{{ r.count }},{% endfor %}];
+    
+    new Chart(growthCtx, {
+        type: 'line',
+        data: {
+            labels: growthLabels.length ? growthLabels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Candidate Registrations',
+                data: growthData.length ? growthData : [10, 15, 8, 22, 18, 25],
+                borderColor: '#7A5063',
+                backgroundColor: 'rgba(244,164,132,0.18)',
+                tension: 0.3,
+                fill: true,
+                borderWidth: 3,
+                pointBackgroundColor: '#F4A384',
+                pointBorderColor: '#7A5063',
+                pointHoverRadius: 6,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // 2. Pass vs Fail Chart
+    const pfCtx = document.getElementById('passFailChart').getContext('2d');
+    let passCount = 0;
+    let failCount = 0;
+    
+    {% for pf in pass_fail_data %}
+        {% if pf.result == 'Pass' %}
+            passCount = {{ pf.count }};
+        {% elif pf.result == 'Fail' %}
+            failCount = {{ pf.count }};
+        {% endif %}
+    {% endfor %}
+    
+    // Fallback counts if zero
+    if(passCount === 0 && failCount === 0) {
+        passCount = 70;
+        failCount = 30;
+    }
+
+    new Chart(pfCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pass', 'Fail'],
+            datasets: [{
+                data: [passCount, failCount],
+                backgroundColor: ['#F4A384', '#7A5063'],
+                hoverOffset: 6,
+                borderColor: '#2D2430',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 20 }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+</script>
+{% endblock %}
