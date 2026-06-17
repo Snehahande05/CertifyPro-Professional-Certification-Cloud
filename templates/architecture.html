@@ -14,41 +14,41 @@
         <div class="card border-0 shadow-sm p-4 bg-white">
             <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-sitemap text-primary me-2"></i>Infrastructure Flowchart</h5>
             
-            <div class="d-flex justify-content-center p-3 bg-light rounded-3 border">
-                <div class="mermaid w-100" style="background-color: transparent;">
-                    graph TD
-                        User[👤 User / Client Browser]
-                        
-                        subgraph VPC ["Amazon VPC (Virtual Private Cloud)"]
-                            subgraph PublicSubnet ["Public Subnet"]
-                                ALB["⚖️ Application Load Balancer"]
-                                EC2["💻 Amazon EC2 (Flask Web App)"]
-                            end
-                            
-                            subgraph PrivateSubnet ["Private Subnet"]
-                                RDS[("🗄️ Amazon RDS (MySQL Database)")]
-                            end
-                        end
-                        
-                        S3["🪣 Amazon S3 (Document Vault)"]
-                        CW["👁️ Amazon CloudWatch (Logs & Metrics)"]
-                        
-                        %% Communication lines
-                        User -->|HTTPS Request| ALB
-                        ALB -->|Forward Request| EC2
-                        EC2 -->|Query/Write Data| RDS
-                        EC2 -->|Upload Certificate/Report| S3
-                        EC2 -->|Push Logs & Performance Stats| CW
-                        
-                        %% Style overrides
-                        classDef aws fill:#ff9900,stroke:#232f3e,stroke-width:2px,color:#fff;
-                        classDef node fill:#1e293b,stroke:#0f172a,stroke-width:1.5px,color:#fff;
-                        classDef client fill:#0284c7,stroke:#0369a1,stroke-width:2px,color:#fff;
-                        
-                        class ALB,EC2,RDS,S3,CW aws;
-                        class User client;
+            <div class="p-3 bg-light rounded-3 border">
+    <div class="text-center">
+        <div class="p-3 border rounded mb-2 bg-white fw-bold">User / Client Browser</div>
+        <div class="mb-2">⬇ HTTPS Request</div>
+
+        <div class="p-3 border rounded mb-2 bg-white fw-bold">Nginx Reverse Proxy</div>
+        <div class="mb-2">⬇ Forward Request</div>
+
+        <div class="p-3 border rounded mb-2 bg-white fw-bold">Gunicorn WSGI Server</div>
+        <div class="mb-2">⬇ Pass Request</div>
+
+        <div class="p-3 border rounded mb-3 bg-white fw-bold">Flask Application on Amazon EC2</div>
+
+        <div class="row mt-3 g-3">
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white fw-bold">
+                    Amazon RDS MySQL<br>
+                    <small class="text-muted">Candidate, User & Workflow Data</small>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white fw-bold">
+                    Amazon S3<br>
+                    <small class="text-muted">Documents & Reports</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white fw-bold">
+                    Amazon CloudWatch<br>
+                    <small class="text-muted">Logs & Metrics</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
